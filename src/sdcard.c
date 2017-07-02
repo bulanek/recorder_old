@@ -36,16 +36,15 @@ uint8_t std_cmd(uint8_t command, const uint32_t arg) {
 	}
 	// 5 - commandSequence size
 	for (int i = 0; i < 5; ++i) {
-		while ((SPI_SD_CARD_REG->SR & SPI_SR_TXE) == 0) {
-		}
+		while ((SPI_SD_CARD_REG->SR & SPI_SR_TXE) == 0);
 		SPI_SD_CARD_REG->DR = commandSequence[i];
 	}
-	// TODO send 0xFF while receiving .. ?
-	while((result & 0x80) != 0U)
-	{
+
+	do {
 		while ((SPI_SD_CARD_REG->SR & SPI_SR_RXNE) == 0);
 		result = SPI_SD_CARD_REG->DR;
-	}
+		SPI_SD_CARD_REG->DR = 0xFF;
+	} while ((result & 0x80) != 0U);
 	return result;
 }
 
@@ -56,15 +55,18 @@ void std_init(void)
 	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_SPE, 0);
 
 	// set  MOSI and CS HIGH
-	SPI_PORT->BSRR |= SUFFIX_EXPAND_ADD(GPIO_BSRR_BS_, SPI_MOSI_PIN);
-	SPI_PORT->BSRR |= SUFFIX_EXPAND_ADD(GPIO_BSRR_BS_, SPI_NSS_PIN);
+	SPI_PORT->BSRR |= SUFFIX_EXPAND_ADD(GPIO_BSRR_BS, SPI_MOSI_PIN_NUM);
+	SPI_NSS_PORT->BSRR |= SUFFIX_EXPAND_ADD(GPIO_BSRR_BS, SPI_NSS_PIN_NUM);
 
 
 	// At least 74 clock toggle clk
+ 	SET_REGISTER_VALUE( SPI_PORT->AFR[1], GPIO_AFRH_AFSEL10, 0);
 	for (int i = 0; i < 80; ++i) {
-		SPI_PORT->BSRR |= SUFFIX_EXPAND_ADD(GPIO_BSRR_BS_, SPI_SCK_PIN);
-		SPI_PORT->BSRR |= SUFFIX_EXPAND_ADD(GPIO_BSRR_BR_, SPI_SCK_PIN);
+		SPI_PORT->BSRR |= SUFFIX_EXPAND_ADD(GPIO_BSRR_BS, SPI_SCK_PIN_NUM);
+		SPI_PORT->BSRR |= SUFFIX_EXPAND_ADD(GPIO_BSRR_BR, SPI_SCK_PIN_NUM);
 	}
+ 	SET_REGISTER_VALUE( SPI_PORT->AFR[1], GPIO_AFRH_AFSEL10, SPI_AF);
+
 		// Enable SPI
 	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_SPE, 1);
 

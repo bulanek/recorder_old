@@ -26,8 +26,6 @@
 #define I2S_CLK                 	  RCC_AHBENR_GPIOBEN
 #define I2S_PORT					  GPIOB
 
-//#define SPI_CLK                 	  RCC_AHBENR_GPIOAEN
-//#define SPI_PORT					  GPIOA
 #define SPI_CLK                 	  RCC_AHBENR_GPIOCEN
 #define SPI_PORT					  GPIOC
 #define SPI_NSS_PORT					GPIOA
@@ -36,21 +34,16 @@
 
 #define SPI_AF							  LL_GPIO_AF_6
 
-// TODO change after dev kit remove
 #define SPI_SD_CARD_REG			SPI3
 
 #define SPI_SCK_PIN                       (1 << 10)
+#define SPI_SCK_PIN_NUM                   10
 #define SPI_MOSI_PIN                      (1 << 12)
+#define SPI_MOSI_PIN_NUM                  12
 #define SPI_MISO_PIN					  (1 << 11)
+#define SPI_MISO_PIN_NUM				  11
 #define SPI_NSS_PIN						  (1 << 15)
-
-
-//#define SPI_SCK_PIN                       (1 << 5)
-//#define SPI_MOSI_PIN                      (1 << 7)
-//#define SPI_MISO_PIN					  	(1 << 6)
-//#define SPI_NSS_PIN						(1 << 4)
-
-
+#define SPI_NSS_PIN_NUM					  15
 
 #define I2S_SD_PIN                        (1 << 15)
 #define I2S_CK_PIN						  (1 << 13)

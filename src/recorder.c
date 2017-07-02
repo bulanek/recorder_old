@@ -99,24 +99,17 @@ void InitializeGPIO(void)
 	if (LL_GPIO_Init(SPI_PORT, &gpioInit) != SUCCESS) {
 	}
 
-	gpioInit.Pin = SPI_MISO_PIN;
-	gpioInit.Mode = LL_GPIO_MODE_ALTERNATE;
-	gpioInit.Pull = LL_GPIO_PULL_DOWN;
-
-	if (LL_GPIO_Init(SPI_PORT, &gpioInit) != SUCCESS)
-	{
-	}
-	// TODO remove this while not using dev kit.
 	gpioInit.Pin = SPI_NSS_PIN;
-	gpioInit.Mode = LL_GPIO_MODE_OUTPUT;
-	gpioInit.Pull = LL_GPIO_PULL_NO;
 	if (LL_GPIO_Init(SPI_NSS_PORT, &gpioInit) != SUCCESS) {
 	}
 
+	gpioInit.Pin = SPI_MISO_PIN;
+	if (LL_GPIO_Init(SPI_PORT, &gpioInit) != SUCCESS) {
+	}
 
-	SPI_NSS_PORT->BSRR |= SUFFIX_EXPAND_ADD(GPIO_BSRR_BS_, SPI_NSS_PIN);
+	SPI_NSS_PORT->BSRR |= SUFFIX_EXPAND_ADD(GPIO_BSRR_BS, SPI_NSS_PIN_NUM);
 
-	SPI_NSS_PORT->BSRR |= SUFFIX_EXPAND_ADD(GPIO_BSRR_BR_, SPI_NSS_PIN);
+	SPI_NSS_PORT->BSRR |= SUFFIX_EXPAND_ADD(GPIO_BSRR_BR, SPI_NSS_PIN_NUM);
 	SPI_NSS_PORT->ODR = 1;
 
 
@@ -305,12 +298,12 @@ void Initialize(void)
 	SET_REGISTER_VALUE(SPI2->I2SPR, SPI_I2SPR_ODD, 0x01);
 
 	// SPI start (SPE) inside sd initialization
-	// set frequency between 100-400kHz (262.144 kHz)
-	// TODO
-//	SET_REGISTER_VALUE(RCC->ICSCR, RCC_ICSCR_MSIRANGE,0b010);
+	// set frequency between 100-400kHz
+	// 16MHz F401 /64 = 250kHz
+	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_BR,0b101);
 	std_init();
-	// set frequency to default (2.097 MHz)
-//	SET_REGISTER_VALUE(RCC->ICSCR, RCC_ICSCR_MSIRANGE,0b101);
+	// Baud rate 16MHz/16 = 1MHz
+	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_BR,0b011);
 
 	// Enable I2S
 	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_I2SE, 0x01);
