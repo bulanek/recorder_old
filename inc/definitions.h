@@ -10,7 +10,7 @@
 
 //#include <stm32l1xx_ll_gpio.h>
 #include <stm32f4xx_ll_gpio.h>
-#include <sdcard.h>
+//#include <sdcard.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 // I2S SPI GPIO
@@ -72,6 +72,9 @@
 				REGISTER &= (~NAME ## _Msk);								\
                 REGISTER |= ( (VALUE) << (NAME ## _Pos)) \
 
+/// BLOCK SIZE for sd card
+#define BLOCK_SIZE 512
+
 volatile extern uint32_t f_TicksPerUs;
 volatile extern uint32_t f_TerminateSPI;
 
@@ -93,5 +96,10 @@ volatile extern uint8_t f_recordThreshold;
 		__enable_irq();
 	}
 #endif
+
+typedef enum{
+	SPI_OK,
+	SPI_ERROR
+} SPI_STATUS;
 
 #endif /* DEFINITIONS_H_ */

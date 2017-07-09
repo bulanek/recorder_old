@@ -66,7 +66,7 @@ int main(void)
 	}
 
 	__WFI();
-	while (f_recordOn != 0U) {
+while (f_recordOn != 0U) {
 		__disable_irq();
 		// interrupt I2S occured.
 		if (f_BufferPosition != f_BufferPositionCache)

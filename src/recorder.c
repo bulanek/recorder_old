@@ -78,7 +78,7 @@ void InitializeGPIO(void)
 	gpioInit.Pin = DEBUG_TX_PIN;
 	gpioInit.Mode = LL_GPIO_MODE_OUTPUT;
 	gpioInit.Speed = LL_GPIO_SPEED_FREQ_LOW;
-	gpioInit.Pull = LL_GPIO_PULL_NO;
+	gpioInit.Pull = LL_GPIO_PULL_UP;
 	gpioInit.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	if (LL_GPIO_Init(DEBUG_PORT, &gpioInit) != SUCCESS) {
 		return;
@@ -93,7 +93,7 @@ void InitializeGPIO(void)
 	gpioInit.Mode = LL_GPIO_MODE_ALTERNATE;
 	gpioInit.Speed = LL_GPIO_SPEED_FREQ_HIGH;
 	gpioInit.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-	gpioInit.Pull = LL_GPIO_PULL_NO;
+	gpioInit.Pull = LL_GPIO_PULL_UP;
 	gpioInit.Alternate = SPI_AF;
 
 	if (LL_GPIO_Init(SPI_PORT, &gpioInit) != SUCCESS) {
@@ -104,6 +104,7 @@ void InitializeGPIO(void)
 	}
 
 	gpioInit.Pin = SPI_MISO_PIN;
+	gpioInit.Pull = LL_GPIO_PULL_UP;
 	if (LL_GPIO_Init(SPI_PORT, &gpioInit) != SUCCESS) {
 	}
 

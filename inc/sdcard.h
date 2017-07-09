@@ -5,6 +5,7 @@
  #define _SDMODULE
 
 #include <stdint.h>
+#include <definitions.h>
 
  #define DBUG     1
  #define NODBUG    0
@@ -32,7 +33,6 @@
  #define START_BLOCK            0xFE        // used to indicate the start of a data block
  #define MMC_FLOATING_BUS     0xFF        // Floating bus condition(?)
 
-#define BLOCK_SIZE 512
 
 
 // R1 SPI response
@@ -44,6 +44,17 @@
 #define TOKEN_SINGLE_WRITE_READ 0b11111110
 
 #define BLOCK_SIZE 512
+
+
+typedef struct __attribute__((packed))
+{
+	uint8_t m_CRCEndBit;
+	uint32_t m_argument;
+	uint8_t m_commandIndex :6;
+	uint8_t m_transmissionBit :1;
+	uint8_t m_startBit :1;
+} SDCommand;
+
 
 
 
@@ -58,7 +69,7 @@ uint8_t single_transmit(const uint8_t data);
 
 uint8_t std_cmd(uint8_t command, uint32_t arg);
 
-void std_init(void);
+SPI_STATUS std_init(void);
 
 void std_terminate(void);
 
