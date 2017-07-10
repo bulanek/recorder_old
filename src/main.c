@@ -45,6 +45,8 @@ volatile uint8_t f_Initialized = 0U;
 
 int main(void)
 {
+	__disable_irq();
+
 	SystemInit();
 
 	f_BufferPosition = 0U;
@@ -64,6 +66,7 @@ int main(void)
 				& RECORD_THRESHOLD_PIN;
 		SET_REGISTER_VALUE(RCC->AHB1ENR, RCC_AHB1ENR_GPIOCEN, 0);
 	}
+	__enable_irq();
 
 	__WFI();
 while (f_recordOn != 0U) {

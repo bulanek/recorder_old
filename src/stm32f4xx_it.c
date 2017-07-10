@@ -65,11 +65,11 @@ void SPI2_IRQHandler(void) {
 }
 
 void EXTI0_IRQHandler(void) {
-	if ((SET_RESET_PORT->IDR & SET_RESET_PIN) != 0) {
-		f_TerminateSPI = 0U;
-		// Enable SPI
-		SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_SPE, 1);
-	} else {
-		f_TerminateSPI = 1U;
-	}
+//	if ((SET_RESET_PORT->IDR & SET_RESET_PIN) != 0) {
+//		f_TerminateSPI = 0U;
+//		// Enable SPI
+//		SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_SPE, 1);
+//	} else {
+//		f_TerminateSPI = 1U;
+//	}
 }

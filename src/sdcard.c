@@ -13,16 +13,18 @@
 
 uint8_t single_transmit(const uint8_t data)
 {
-	while ((SPI_SD_CARD_REG->SR & SPI_SR_TXE) == 0);
+	(void) SPI_SD_CARD_REG->DR;
+	while ((SPI_SD_CARD_REG->SR & SPI_SR_TXE) == 0) ;
 	SPI_SD_CARD_REG->DR = data;
-	while ((SPI_SD_CARD_REG->SR & SPI_SR_RXNE) == 0);
-	return SPI_SD_CARD_REG->DR;
+	while ((SPI_SD_CARD_REG->SR & SPI_SR_RXNE) == 0) ;
+	uint32_t returnData = SPI_SD_CARD_REG->DR;
+	return returnData;
 }
 
 
 uint8_t std_cmd(uint8_t command, const uint32_t arg) {
 
-	uint8_t result = 0xFF;
+	uint32_t result = 0xFFU;
 	uint8_t commandSequence[] = { (uint8_t) (command | 0x40), (uint8_t) (arg
 			>> 24), (uint8_t) (arg >> 16), (uint8_t) (arg >> 8), (uint8_t) (arg
 			& 0xFF), 0xFF };
@@ -35,27 +37,38 @@ uint8_t std_cmd(uint8_t command, const uint32_t arg) {
 	// set CRC
 	if (command == CMD0_GO_IDLE_STATE) {
 		// argument 0
-//		commandSequence[5] = 0x95;
 		SDCommand.m_CRCEndBit = 0x95;
 	} else if (command == CMD8_SEND_IF_COND) {
 		// argument 0x1AA
-//		commandSequence[5] = 0x87;
 		SDCommand.m_CRCEndBit = 0x87;
 	}
 	// 5 - commandSequence size
+	(void)SPI_SD_CARD_REG->DR;
 	for (int i = 0; i < 6; ++i) {
 		while ((SPI_SD_CARD_REG->SR & SPI_SR_TXE) == 0);
-//		SPI_SD_CARD_REG->DR = commandSequence[5 - i - 1];
 		uint8_t value = *((uint8_t*) &SDCommand + 6 - i - 1);
 		SPI_SD_CARD_REG->DR = value;// (uint32_t) *((uint8_t*) &SDCommand + 6 - i - 1);
 	}
+	while ((SPI_SD_CARD_REG->SR & SPI_SR_TXE) == 0U);
+	while ((SPI_SD_CARD_REG->SR & SPI_SR_RXNE) == 0U);
+	result = SPI_SD_CARD_REG->DR;
+	for (int i = 0; i < 50; ++i) {
+	}
 
-	do {
-//		while ((SPI_SD_CARD_REG->SR & SPI_SR_RXNE) == 0);
-		while ((SPI_SD_CARD_REG->SR & SPI_SR_TXE) == 0);
-		result = SPI_SD_CARD_REG->DR;
-		SPI_SD_CARD_REG->DR = 0xFF;
-	} while ((result & 0x80) != 0U);
+	while (((result = single_transmit(0xFF)) & 0x80) != 0);
+//	while ((result & 0x80) != 0U)
+//	{
+//		while ((SPI_SD_CARD_REG->SR & SPI_SR_TXE) == 0U){
+//		};
+//		SPI_SD_CARD_REG->DR = 0xFF;
+////		while ((SPI_SD_CARD_REG->SR & SPI_SR_TXE) == 0U);
+//		while ((SPI_SD_CARD_REG->SR & SPI_SR_RXNE) == 0U){
+//		}
+//		result = SPI_SD_CARD_REG->DR;
+//	}
+
+
+
 	return result;
 }
 
@@ -100,13 +113,20 @@ SPI_STATUS std_init(void)
 	else
 	{
 		for (unsigned int i = 0; i < 4U; ++i) {
-			r7ResponseLSB |= (single_transmit(0XFF) << ((3 - i) * 8));
+			uint8_t value = single_transmit(0XFF);
+			r7ResponseLSB |= (value << ((3 - i) * 8));
 		}
-		if (((r7ResponseLSB & 0xF00) >> 8) != CMD8_VOLTAGE) {
-			// unsupported voltage
-	//		assert_failed(__FILE__,__LINE__);
+//		if (((r7ResponseLSB & 0xF00) >> 8) != CMD8_VOLTAGE) {
+//			// unsupported voltage
+//	//		assert_failed(__FILE__,__LINE__);
+//			return SPI_ERROR;
+//		}
+		if (((Response7*) &r7ResponseLSB)->m_voltageAccepted != CMD8_VOLTAGE)
+		{
 			return SPI_ERROR;
 		}
+
+
 		if ((r7ResponseLSB & 0xFF) != CMD8_PATTERN)
 		{
 			// wrong pattern back

@@ -219,17 +219,17 @@ void Initialize(void)
 // 		}
 #endif
 
-	// Initialize NVIC
-	IRQn_Type type = SPI2_IRQn;
-	NVIC_EnableIRQ(type);
-	NVIC_SetPriority(type, 2);
-	// TODO SPI3->SPI1
-	type = SPI3_IRQn;
-	NVIC_EnableIRQ(type);
-	NVIC_SetPriority(type, 2);
-	type = EXTI0_IRQn;
-	NVIC_EnableIRQ(type);
-	NVIC_SetPriority(type, 1);
+//	// Initialize NVIC
+//	IRQn_Type type = SPI2_IRQn;
+//	NVIC_EnableIRQ(type);
+//	NVIC_SetPriority(type, 2);
+//	// TODO SPI3->SPI1
+//	type = SPI3_IRQn;
+//	NVIC_EnableIRQ(type);
+//	NVIC_SetPriority(type, 2);
+//	type = EXTI0_IRQn;
+//	NVIC_EnableIRQ(type);
+//	NVIC_SetPriority(type, 1);
 
 	InitializeGPIO();
 

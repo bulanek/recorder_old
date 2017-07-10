@@ -55,6 +55,14 @@ typedef struct __attribute__((packed))
 	uint8_t m_startBit :1;
 } SDCommand;
 
+typedef struct __attribute__((packed))
+{
+	uint8_t m_checkPattern;
+	uint8_t m_voltageAccepted :4;
+	uint16_t m_reservedBits;
+	uint8_t m_Command :4;
+} Response7;
+
 
 
 
