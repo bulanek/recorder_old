@@ -5,7 +5,6 @@
   * @version V1.7.0
   * @date    17-February-2017
   * @brief   Header file of BUS LL module.
-
   @verbatim
                       ##### RCC Limitations #####
   ==============================================================================
@@ -15,12 +14,10 @@
       from/to registers.
       (+) This delay depends on the peripheral mapping.
         (++) AHB & APB peripherals, 1 dummy read is necessary
-
     [..]
       Workarounds:
       (#) For AHB & APB peripherals, a dummy read to the peripheral register has been
           inserted in each LL_{BUS}_GRP{x}_EnableClock() function.
-
   @endverbatim
   ******************************************************************************
   * @attention
@@ -1716,7 +1713,6 @@ __STATIC_INLINE void LL_APB1_GRP1_DisableClockLowPower(uint32_t Periphs)
   *         @arg @ref LL_APB2_GRP1_PERIPH_DSI  (*)
   *         @arg @ref LL_APB2_GRP1_PERIPH_DFSDM1 (*)
   *         @arg @ref LL_APB2_GRP1_PERIPH_DFSDM2 (*)
-
   *
   *         (*) value not defined in all devices.
   * @retval None

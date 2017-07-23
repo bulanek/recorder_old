@@ -63,6 +63,16 @@ typedef struct __attribute__((packed))
 	uint8_t m_Command :4;
 } Response7;
 
+typedef struct __attribute__((packed))
+{
+	uint8_t m_reserved1 :7;
+	uint8_t m_lowVoltage :1;
+	uint8_t m_reserved2 :7;
+	uint16_t m_voltages_27_36 :9;
+	uint8_t m_reserved3 :6;
+	uint8_t m_CCS :1;
+	uint8_t m_PowerUpStatus :1;
+} Response3;
 
 
 

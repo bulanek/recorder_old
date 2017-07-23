@@ -86,16 +86,16 @@ volatile extern uint16_t f_BufferI2S[BLOCK_SIZE / 2];
 volatile extern uint8_t f_recordOn;
 volatile extern uint8_t f_recordThreshold;
 
-#ifdef DEBUG
-	UART_HandleTypeDef f_UartHandle;
-	static inline void debug_print(uint8_t* message, uint16_t size)
-	{
-		__disable_irq();
-		// Timeout is in milliseconds (missing doc)
-		HAL_UART_Transmit(&f_UartHandle, message, size, 1000);
-		__enable_irq();
-	}
-#endif
+//#ifdef DEBUG
+//	UART_HandleTypeDef f_UartHandle;
+//	static inline void debug_print(uint8_t* message, uint16_t size)
+//	{
+//		__disable_irq();
+//		// Timeout is in milliseconds (missing doc)
+//		HAL_UART_Transmit(&f_UartHandle, message, size, 1000);
+//		__enable_irq();
+//	}
+//#endif
 
 typedef enum{
 	SPI_OK,

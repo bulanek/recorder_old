@@ -15,7 +15,7 @@
 #include <stm32f4xx.h>
 
 //#include <stm32l1xx_ll_exti.h>
-#include <stm32f4xx_ll_exti.h>
+//#include <stm32f4xx_ll_exti.h>
 #include <definitions.h>
 #include <recorder.h>
 #include <sdcard.h>
@@ -71,23 +71,23 @@ void InitializeGPIO(void)
 	SET_REGISTER_VALUE(RCC->AHB1ENR, RCC_AHB1ENR_GPIOBEN, 1);
 	SET_REGISTER_VALUE(RCC->AHB1ENR, RCC_AHB1ENR_GPIOCEN, 1);
 
-	// SPI (sdcard) configuration using LL lib.
+//	// SPI (sdcard) configuration using LL lib.
 	LL_GPIO_InitTypeDef gpioInit;
-
-#ifdef DEBUG
-	gpioInit.Pin = DEBUG_TX_PIN;
-	gpioInit.Mode = LL_GPIO_MODE_OUTPUT;
-	gpioInit.Speed = LL_GPIO_SPEED_FREQ_LOW;
-	gpioInit.Pull = LL_GPIO_PULL_UP;
-	gpioInit.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-	if (LL_GPIO_Init(DEBUG_PORT, &gpioInit) != SUCCESS) {
-		return;
-	}
-
-	LL_GPIO_SetOutputPin(DEBUG_PORT, DEBUG_TX_PIN);
-	LL_GPIO_ResetOutputPin(DEBUG_PORT, DEBUG_TX_PIN);
-
-#endif
+//
+//#ifdef DEBUG
+//	gpioInit.Pin = DEBUG_TX_PIN;
+//	gpioInit.Mode = LL_GPIO_MODE_OUTPUT;
+//	gpioInit.Speed = LL_GPIO_SPEED_FREQ_LOW;
+//	gpioInit.Pull = LL_GPIO_PULL_UP;
+//	gpioInit.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+//	if (LL_GPIO_Init(DEBUG_PORT, &gpioInit) != SUCCESS) {
+//		return;
+//	}
+//
+//	LL_GPIO_SetOutputPin(DEBUG_PORT, DEBUG_TX_PIN);
+//	LL_GPIO_ResetOutputPin(DEBUG_PORT, DEBUG_TX_PIN);
+//
+//#endif
 
 	gpioInit.Pin = SPI_SCK_PIN | SPI_MOSI_PIN;
 	gpioInit.Mode = LL_GPIO_MODE_ALTERNATE;
@@ -115,11 +115,11 @@ void InitializeGPIO(void)
 
 
 	// I2S (MEMS) configuration
-	gpioInit.Pin =  I2S_CK_PIN;
+	gpioInit.Pin =  I2S_CK_PIN | I2S_WS_PIN;
 	gpioInit.Mode = LL_GPIO_MODE_ALTERNATE;
 	gpioInit.Speed = LL_GPIO_SPEED_FREQ_HIGH;
 	gpioInit.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-	gpioInit.Pull = LL_GPIO_PULL_NO;
+	gpioInit.Pull = LL_GPIO_PULL_DOWN;
 	gpioInit.Alternate = SPI_I2S_AF;
 
 	if (LL_GPIO_Init(I2S_PORT, &gpioInit) != SUCCESS)
@@ -127,24 +127,21 @@ void InitializeGPIO(void)
 	}
 
 	gpioInit.Pin = I2S_SD_PIN;
-	gpioInit.Mode = LL_GPIO_MODE_ALTERNATE;
-	gpioInit.Speed = LL_GPIO_SPEED_FREQ_HIGH;
 	gpioInit.Pull = LL_GPIO_PULL_NO;
-	gpioInit.Alternate = SPI_I2S_AF;
 
 	if (LL_GPIO_Init(I2S_PORT, &gpioInit) != SUCCESS)
 	{
 	}
 
-	gpioInit.Pin = RECORD_ON_PIN | RECORD_THRESHOLD_PIN;
-	gpioInit.Mode = LL_GPIO_MODE_ALTERNATE;
-	gpioInit.Pull = LL_GPIO_PULL_NO;
-	gpioInit.Alternate = LL_GPIO_AF_0;
-	gpioInit.Speed = LL_GPIO_SPEED_FREQ_LOW;
-
-	if (LL_GPIO_Init(RECORD_PORT, &gpioInit) != SUCCESS)
-	{
-	}
+//	gpioInit.Pin = RECORD_ON_PIN | RECORD_THRESHOLD_PIN;
+//	gpioInit.Mode = LL_GPIO_MODE_ALTERNATE;
+//	gpioInit.Pull = LL_GPIO_PULL_NO;
+//	gpioInit.Alternate = LL_GPIO_AF_0;
+//	gpioInit.Speed = LL_GPIO_SPEED_FREQ_LOW;
+//
+//	if (LL_GPIO_Init(RECORD_PORT, &gpioInit) != SUCCESS)
+//	{
+//	}
 	// Set record configuration
 
 //	volatile uint8_t f_recordOn = RECORD_PORT->ODR & RECORD_ON_PIN;
@@ -219,11 +216,11 @@ void Initialize(void)
 // 		}
 #endif
 
-//	// Initialize NVIC
-//	IRQn_Type type = SPI2_IRQn;
-//	NVIC_EnableIRQ(type);
-//	NVIC_SetPriority(type, 2);
-//	// TODO SPI3->SPI1
+	// Initialize NVIC
+	IRQn_Type type = SPI2_IRQn;
+	NVIC_EnableIRQ(type);
+	NVIC_SetPriority(type, 4U);
+	// TODO SPI3->SPI1
 //	type = SPI3_IRQn;
 //	NVIC_EnableIRQ(type);
 //	NVIC_SetPriority(type, 2);
@@ -239,8 +236,12 @@ void Initialize(void)
 	/* Enable the SPI clock */
 	SET_REGISTER_VALUE(RCC->APB1ENR, RCC_APB1ENR_SPI2EN, 1);
 	// TODO change while dev kit not used
-//	SET_REGISTER_VALUE(RCC->APB2ENR, RCC_APB2ENR_SPI1EN, 1);
+	SET_REGISTER_VALUE(RCC->APB2ENR, RCC_APB2ENR_SPI1EN, 1);
 	SET_REGISTER_VALUE(RCC->APB1ENR, RCC_APB1ENR_SPI3EN, 1);
+
+	SET_REGISTER_VALUE(RCC->PLLI2SCFGR, RCC_PLLI2SCFGR_PLLI2SN, 192);
+	SET_REGISTER_VALUE(RCC->PLLI2SCFGR, RCC_PLLI2SCFGR_PLLI2SR, 3);
+	SET_REGISTER_VALUE(RCC->CR, RCC_CR_PLLI2SON,1);
 
 	// Disable SPI ( set format while disabled SPI)
 	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_SPE, 0);
@@ -277,14 +278,16 @@ void Initialize(void)
 	// Initialize I2S
 ////////////////////////////////////////////////////////////////////////////////
 
-	// RX buffer not empty interrupt enable
-	SET_REGISTER_VALUE(SPI2->CR2, SPI_CR2_RXNEIE, 1);
 	// Disable I2S
 	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_I2SE, 0);
+
+	SET_REGISTER_VALUE(SPI2->CR2, SPI_CR2_RXNEIE, 1);
+	SET_REGISTER_VALUE(SPI2->CR2, SPI_CR2_ERRIE, 1);
+
 	// Set I2S mod on SPI2
 	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_I2SMOD, 0x01);
 	// Set as master - receive
-	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_I2SCFG, 0x3);
+	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_I2SCFG, 0b11);
 	// Standard: MSB
 	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_I2SSTD, 0x01);
 	// Set steady state (high level)
@@ -294,22 +297,21 @@ void Initialize(void)
 	// Set number of bits per channel (16 bit)
 	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_CHLEN, 0x00);
 
-	// Set 16kHz sampling (assume 2 MHz master clock, data length 16bit)
-	SET_REGISTER_VALUE(SPI2->I2SPR, SPI_I2SPR_I2SDIV, 15);
+	// Set 16kHz sampling (assume  data length 16bit)
+	SET_REGISTER_VALUE(SPI2->I2SPR, SPI_I2SPR_I2SDIV, 62);
 	SET_REGISTER_VALUE(SPI2->I2SPR, SPI_I2SPR_ODD, 0x01);
 
 	// SPI start (SPE) inside sd initialization
 	// set frequency between 100-400kHz
 	// 16MHz F401 /64 = 250kHz
-	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_BR,0b101);
-	std_init();
-	// Baud rate 16MHz/16 = 1MHz
-	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_BR,0b011);
-
-	// Enable I2S
-	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_I2SE, 0x01);
+//	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_BR,0b101);
+//	std_init();
+//	// Baud rate 16MHz/16 = 1MHz
+//	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_BR,0b011);
 
 
+//	// Enable I2S
+	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_I2SE, 1U);
 }
 
 

@@ -42,41 +42,48 @@ volatile uint8_t f_recordThreshold;
 
 volatile uint8_t f_Initialized = 0U;
 
+ void WFI(void)
+{
+  __ASM volatile ("wfi");
+}
+
+ void enable_irq(void)
+ {
+	__ASM volatile ("cpsie i" : : : "memory");
+ }
+
+
 
 int main(void)
-{
-	__disable_irq();
+ {
+//	SET_REGISTER_VALUE(SCB->SCR,SCB_SCR_SLEEPDEEP,0);
+	enable_irq();
+	__enable_irq();
+  __ASM volatile ("cpsie i" : : : "memory");
 
-	SystemInit();
 
 	f_BufferPosition = 0U;
 	f_signalPower = 0U;
 	f_BufferPositionCache = 0U;
 	f_LowLevelCounter = f_HighLevelCounter = 0U;
 
-	if (f_Initialized == 0U)
-	{
+	if (f_Initialized == 0U) {
 		Initialize();
 		f_Initialized = 1U;
-	}
-	else {
+	} else {
 		SET_REGISTER_VALUE(RCC->AHB1ENR, RCC_AHB1ENR_GPIOCEN, 1);
 		f_recordOn = RECORD_PORT->ODR & RECORD_ON_PIN;
-		f_recordThreshold = RECORD_PORT->ODR
-				& RECORD_THRESHOLD_PIN;
+		f_recordThreshold = RECORD_PORT->ODR & RECORD_THRESHOLD_PIN;
 		SET_REGISTER_VALUE(RCC->AHB1ENR, RCC_AHB1ENR_GPIOCEN, 0);
 	}
 	__enable_irq();
-
-	__WFI();
-while (f_recordOn != 0U) {
-		__disable_irq();
+//	while (f_recordOn != 0U) {
+	while (1U) {
+//		__disable_irq();
 		// interrupt I2S occured.
-		if (f_BufferPosition != f_BufferPositionCache)
-		{
+		if (f_BufferPosition != f_BufferPositionCache) {
 			// Copy buffer I2S to buffer of SD card
-			if (f_BufferPosition == 0)
-			{
+			if (f_BufferPosition == 0) {
 				for (int i = 0; i < BLOCK_SIZE; ++i) {
 					f_bufferSD[i] =
 							(uint8_t) (f_BufferI2S[i / 2] >> 8 * (i % 2));
@@ -100,7 +107,6 @@ while (f_recordOn != 0U) {
 					}
 				}
 
-
 //				if (f_TerminateSPI == 0)
 //				{
 //					if (f_LowLevelCounter > LOW_LEVEL_COUNTER_MAX) {
@@ -114,14 +120,12 @@ while (f_recordOn != 0U) {
 //						std_init();
 //					}
 //				}
-			}
-			else{
+			} else {
 				__enable_irq();
 			}
+		} else {
+			__enable_irq();
 		}
-		else{
-		__enable_irq();
-		}
-		__WFI();
+//		WFI();
 	}
 }

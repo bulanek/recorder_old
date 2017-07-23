@@ -37,27 +37,27 @@
   * @param  None
   * @retval None
   */
-void SysTick_Handler(void)
+void SPI1_IRQHandler(void)
 {
-	HAL_IncTick();
-	HAL_SYSTICK_IRQHandler();
+	uint32_t a=10;
 
-
-#ifdef USE_RTOS_SYSTICK
-	osSystickHandler();
-#endif
 }
 
 
-
 void SPI2_IRQHandler(void) {
-	if (f_TerminateSPI) {
-		// wait one spi2 clock
-		TM_DelayUs(1000U);
-		// Disable I2S
-		SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_I2SE, 0x00);
+	if ((SPI2->SR & SPI_SR_RXNE) == 0U)
+	{
+//		SPI2->DR = 0xFFFF;
+		uint32_t a =1 ;
 		return;
 	}
+//	if (f_TerminateSPI) {
+//		// wait one spi2 clock
+//		TM_DelayUs(1000U);
+//		// Disable I2S
+//		SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_I2SE, 0x00);
+//		return;
+//	}
 	f_BufferI2S[f_BufferPosition] = SPI2->DR;
 	f_signalPower += f_BufferI2S[f_BufferPosition];
 	f_BufferPosition = (++f_BufferPosition) % (BLOCK_SIZE / 2); // circular buffer

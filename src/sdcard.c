@@ -25,9 +25,6 @@ uint8_t single_transmit(const uint8_t data)
 uint8_t std_cmd(uint8_t command, const uint32_t arg) {
 
 	uint32_t result = 0xFFU;
-	uint8_t commandSequence[] = { (uint8_t) (command | 0x40), (uint8_t) (arg
-			>> 24), (uint8_t) (arg >> 16), (uint8_t) (arg >> 8), (uint8_t) (arg
-			& 0xFF), 0xFF };
 	SDCommand SDCommand;
 	SDCommand.m_commandIndex = command;
 	SDCommand.m_argument = arg;
@@ -43,31 +40,21 @@ uint8_t std_cmd(uint8_t command, const uint32_t arg) {
 		SDCommand.m_CRCEndBit = 0x87;
 	}
 	// 5 - commandSequence size
-	(void)SPI_SD_CARD_REG->DR;
+	(void) SPI_SD_CARD_REG->DR;
 	for (int i = 0; i < 6; ++i) {
 		while ((SPI_SD_CARD_REG->SR & SPI_SR_TXE) == 0);
 		uint8_t value = *((uint8_t*) &SDCommand + 6 - i - 1);
 		SPI_SD_CARD_REG->DR = value;// (uint32_t) *((uint8_t*) &SDCommand + 6 - i - 1);
 	}
-	while ((SPI_SD_CARD_REG->SR & SPI_SR_TXE) == 0U);
-	while ((SPI_SD_CARD_REG->SR & SPI_SR_RXNE) == 0U);
+	while ((SPI_SD_CARD_REG->SR & SPI_SR_TXE) == 0U)
+		;
+	while ((SPI_SD_CARD_REG->SR & SPI_SR_RXNE) == 0U)
+		;
 	result = SPI_SD_CARD_REG->DR;
 	for (int i = 0; i < 50; ++i) {
 	}
 
-	while (((result = single_transmit(0xFF)) & 0x80) != 0);
-//	while ((result & 0x80) != 0U)
-//	{
-//		while ((SPI_SD_CARD_REG->SR & SPI_SR_TXE) == 0U){
-//		};
-//		SPI_SD_CARD_REG->DR = 0xFF;
-////		while ((SPI_SD_CARD_REG->SR & SPI_SR_TXE) == 0U);
-//		while ((SPI_SD_CARD_REG->SR & SPI_SR_RXNE) == 0U){
-//		}
-//		result = SPI_SD_CARD_REG->DR;
-//	}
-
-
+	while (((result = single_transmit(0xFF)) & 0x80) != 0) ;
 
 	return result;
 }
@@ -127,7 +114,7 @@ SPI_STATUS std_init(void)
 		}
 
 
-		if ((r7ResponseLSB & 0xFF) != CMD8_PATTERN)
+		if (((Response7*) &r7ResponseLSB)->m_checkPattern != CMD8_PATTERN)
 		{
 			// wrong pattern back
 			return SPI_ERROR;
@@ -135,21 +122,47 @@ SPI_STATUS std_init(void)
 	}
 
 	r7ResponseMSB = std_cmd(CMD_58_READ_OCR, 0);
+	if (r7ResponseMSB != R1_IDLE_STATE)
+	{
+		return SPI_ERROR;
+	}
+
 	// TODO check OCR
+	r7ResponseLSB = 0U;
+	for (unsigned int i = 0; i < 4U; ++i) {
+		uint8_t value = single_transmit(0XFF);
+		r7ResponseLSB |= (value << ((3 - i) * 8));
+	}
+	if ((((Response3*) &r7ResponseLSB)->m_voltages_27_36 & 0x80) == 0U) {
+		// wrong OCR voltage supported
+		return SPI_ERROR;
+	}
+	if (((Response3*) &r7ResponseLSB)->m_PowerUpStatus != 0U) {
+		return SPI_ERROR;
+	}
 
 	// all acmd preceded by CMD55.
 	std_cmd(CMD55_APP_CMD, 0);
 	// SDSC and also SDXC (30 bit)
-	while ((r7ResponseMSB = std_cmd(ACMD41_SD_SEND_OP_COND, 0x4000))
-			== R1_IDLE_STATE) {
+	r7ResponseMSB = std_cmd(ACMD41_SD_SEND_OP_COND, 0x4000);
+	if (r7ResponseMSB != R1_IDLE_STATE)
+	{
+		return SPI_ERROR;
 	}
 
 	r7ResponseMSB = std_cmd(CMD_58_READ_OCR, 0);
+	if (r7ResponseMSB != R1_IDLE_STATE)
+	{
+		return SPI_ERROR;
+	}
+
+	r7ResponseLSB = 0U;
 	for (unsigned int i = 0; i < 4U; ++i) {
 		r7ResponseLSB |= single_transmit(0xFF) << (3 - i) * 8;
 	}
+
 	// Get CCS
-	if ((r7ResponseLSB & 0x8000)) {
+	if (((Response3*) &r7ResponseLSB)->m_CCS != 0U) {
 		f_SdType = SDHC_SDXC;
 	} else {
 		f_SdType = SDSC;
