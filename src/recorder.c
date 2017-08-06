@@ -194,45 +194,12 @@ void InitializeGPIO(void)
 
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Initialize SPI.
-////////////////////////////////////////////////////////////////////////////////
-void Initialize(void)
-{
-
-
- 	// Debug
-#ifdef DEBUG
-// 		f_UartHandle.Init.BaudRate = 115000U;
-// 		f_UartHandle.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-// 		f_UartHandle.Init.Mode = UART_MODE_TX;
-// 		f_UartHandle.Init.OverSampling = UART_OVERSAMPLING_8;
-// 		f_UartHandle.Init.Parity = UART_PARITY_NONE;
-// 		f_UartHandle.Init.StopBits = UART_STOPBITS_1;
-// 		f_UartHandle.Init.WordLength = UART_WORDLENGTH_8B;
-// 		if(HAL_UART_Init(&f_UartHandle) != HAL_OK)
-// 		{
-// 		}
-#endif
-
-	// Initialize NVIC
-	IRQn_Type type = SPI2_IRQn;
-	NVIC_EnableIRQ(type);
-	NVIC_SetPriority(type, 4U);
-	// TODO SPI3->SPI1
-//	type = SPI3_IRQn;
-//	NVIC_EnableIRQ(type);
-//	NVIC_SetPriority(type, 2);
-//	type = EXTI0_IRQn;
-//	NVIC_EnableIRQ(type);
-//	NVIC_SetPriority(type, 1);
-
-	InitializeGPIO();
-
 ////////////////////////////////////////////////////////////////////////////////
 	// Initialize SPI comm with sdcard
 ////////////////////////////////////////////////////////////////////////////////
+void InitializeSDCard(void)
+{
+
 	/* Enable the SPI clock */
 	SET_REGISTER_VALUE(RCC->APB1ENR, RCC_APB1ENR_SPI2EN, 1);
 	// TODO change while dev kit not used
@@ -270,13 +237,21 @@ void Initialize(void)
 	// SS output enable
 	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR2, SPI_CR2_SSOE, 1);
 
-	// SPI Mode
-	SET_REGISTER_VALUE(SPI_SD_CARD_REG->I2SCFGR, SPI_I2SCFGR_I2SMOD, 0);
 
+	// set frequency between 100-400kHz
+	// 16MHz F401 /64 = 250kHz
+	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_BR,0b101);
+	std_init();
+//	// Baud rate 16MHz/16 = 1MHz
+	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_BR,0b011);
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-	// Initialize I2S
+	// Initialize I2S for microphone
 ////////////////////////////////////////////////////////////////////////////////
+void InitializeMicrophone(void)
+{
 
 	// Disable I2S
 	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_I2SE, 0);
@@ -301,13 +276,47 @@ void Initialize(void)
 	SET_REGISTER_VALUE(SPI2->I2SPR, SPI_I2SPR_I2SDIV, 62);
 	SET_REGISTER_VALUE(SPI2->I2SPR, SPI_I2SPR_ODD, 0x01);
 
-	// SPI start (SPE) inside sd initialization
-	// set frequency between 100-400kHz
-	// 16MHz F401 /64 = 250kHz
-//	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_BR,0b101);
-//	std_init();
-//	// Baud rate 16MHz/16 = 1MHz
-//	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_BR,0b011);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize SPI.
+////////////////////////////////////////////////////////////////////////////////
+void Initialize(void)
+{
+
+
+ 	// Debug
+#ifdef DEBUG
+// 		f_UartHandle.Init.BaudRate = 115000U;
+// 		f_UartHandle.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+// 		f_UartHandle.Init.Mode = UART_MODE_TX;
+// 		f_UartHandle.Init.OverSampling = UART_OVERSAMPLING_8;
+// 		f_UartHandle.Init.Parity = UART_PARITY_NONE;
+// 		f_UartHandle.Init.StopBits = UART_STOPBITS_1;
+// 		f_UartHandle.Init.WordLength = UART_WORDLENGTH_8B;
+// 		if(HAL_UART_Init(&f_UartHandle) != HAL_OK)
+// 		{
+// 		}
+#endif
+
+	// Initialize NVIC
+	IRQn_Type type = SPI2_IRQn;
+	NVIC_EnableIRQ(type);
+	NVIC_SetPriority(type, 4U);
+	// TODO SPI3->SPI1
+//	type = SPI3_IRQn;
+//	NVIC_EnableIRQ(type);
+//	NVIC_SetPriority(type, 2);
+//	type = EXTI0_IRQn;
+//	NVIC_EnableIRQ(type);
+//	NVIC_SetPriority(type, 1);
+
+	InitializeGPIO();
+	InitializeSDCard();
+	InitializeMicrophone();
+
+
 
 
 //	// Enable I2S

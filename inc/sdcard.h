@@ -16,7 +16,7 @@
  #define CMD8_SEND_IF_COND        8            // CMD8 - send interface condition
 #define CMD8_PATTERN 0xAA // arb. pattern while sending CMD8
 #define CMD8_VOLTAGE 0x01 // voltage in range 2.7V-3.6V..
- #define SEND_CSD            9            // CMD9 - send card status
+ #define CMD9_SEND_CSD            9            // CMD9 - send card status
  #define SET_BLOCKLEN        16            // CMD16 - set blocklength
  #define CMD24_WRITE_SINGLE_BLOCK    24            // CMD24 - write (single) block
  #define CMD55_APP_CMD                55            // CMD55 - next command is an application specific command, not standard
@@ -74,7 +74,32 @@ typedef struct __attribute__((packed))
 	uint8_t m_PowerUpStatus :1;
 } Response3;
 
+typedef struct __attribute__((packed))
+{
+	uint8_t M_CSD_STRUCTURE :2;
+	uint8_t m_Reserved1 :6;
+	uint8_t m_TAAC;
+	uint8_t m_NSAC;
+	uint8_t m_TRAN_SPEED;
+	uint16_t m_CCC: 12;
+	uint8_t m_READ_BL_LEN: 4;
+	uint8_t m_READ_BL_PARTIAL :1;
+	uint8_t m_WRITE_BLK_MISALIGN :1;
+	uint8_t m_READ_BLK_MISALIGN :1;
+	uint8_t m_DSR_IMP :1;
+	uint8_t m_Reserved2 :6;
+	uint32_t m_C_SIZE :22;
+	// TODO implement if needed
+	uint32_t m_Reserved3;
+	uint16_t m_Reserved4;
+} CSDRegister;
 
+/// Sd Card CSD register
+static CSDRegister f_csdRegister;
+
+#define CSD_REG_SIZE_BYTES 16
+
+CASSERT(CSD_REG_SIZE_BYTES == sizeof(CSDRegister), sdcard);
 
  // Prototypes
 
@@ -92,6 +117,8 @@ SPI_STATUS std_init(void);
 void std_terminate(void);
 
 void std_write(void);
+
+void std_updateCSDReg(void);
 
 enum SDType{
 	SDHC_SDXC,

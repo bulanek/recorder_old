@@ -32,23 +32,11 @@
 /*            	  	    Processor Exceptions Handlers                         */
 /******************************************************************************/
 
-/**
-  * @brief  This function handles SysTick Handler, but only if no RTOS defines it.
-  * @param  None
-  * @retval None
-  */
-void SPI1_IRQHandler(void)
-{
-	uint32_t a=10;
-
-}
-
 
 void SPI2_IRQHandler(void) {
 	if ((SPI2->SR & SPI_SR_RXNE) == 0U)
 	{
 //		SPI2->DR = 0xFFFF;
-		uint32_t a =1 ;
 		return;
 	}
 //	if (f_TerminateSPI) {

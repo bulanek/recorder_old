@@ -235,8 +235,16 @@ void std_write(void)
 
 }
 
+void std_updateCSDReg(void)
+{
+	uint8_t response8Bytes = std_cmd(CMD9_SEND_CSD, 0U);
+
+	for (uint8_t i = 0U; i < CSD_REG_SIZE_BYTES; ++i) {
+		*((uint8_t*) &f_csdRegister + CSD_REG_SIZE_BYTES - 1 - i) = single_transmit(
+				0xFF);
+	}
+}
 
  /*****************************************************************************
   * EOF
   *****************************************************************************/
-

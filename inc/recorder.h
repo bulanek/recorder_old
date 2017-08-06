@@ -21,6 +21,10 @@ void TM_DelayUs(const uint32_t timeUs);
 
 void InitializeGPIO(void);
 
+void InitializeSDCard(void);
+
+void InitializeMicrophone(void);
+
 /// Main initialization procedure with sd card initialization as well.
 void Initialize(void);
 
