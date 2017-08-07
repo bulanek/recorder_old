@@ -33,12 +33,9 @@
 /******************************************************************************/
 
 
+/// I2S interrupt
 void SPI2_IRQHandler(void) {
-	if ((SPI2->SR & SPI_SR_RXNE) == 0U)
-	{
-//		SPI2->DR = 0xFFFF;
-		return;
-	}
+
 //	if (f_TerminateSPI) {
 //		// wait one spi2 clock
 //		TM_DelayUs(1000U);

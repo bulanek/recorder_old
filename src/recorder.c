@@ -245,6 +245,9 @@ void InitializeSDCard(void)
 //	// Baud rate 16MHz/16 = 1MHz
 	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_BR,0b011);
 
+	std_updateCSDReg();
+
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
