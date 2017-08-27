@@ -125,9 +125,11 @@ void InitializeGPIO(void)
 	if (LL_GPIO_Init(I2S_PORT, &gpioInit) != SUCCESS)
 	{
 	}
-
+	gpioInit.Mode = LL_GPIO_MODE_ALTERNATE;
+	gpioInit.Speed = LL_GPIO_SPEED_FREQ_HIGH;
+	gpioInit.Alternate = SPI_I2S_AF;
 	gpioInit.Pin = I2S_SD_PIN;
-	gpioInit.Pull = LL_GPIO_PULL_NO;
+	gpioInit.Pull = LL_GPIO_PULL_UP;
 
 	if (LL_GPIO_Init(I2S_PORT, &gpioInit) != SUCCESS)
 	{
@@ -262,6 +264,7 @@ void InitializeMicrophone(void)
 	SET_REGISTER_VALUE(SPI2->CR2, SPI_CR2_RXNEIE, 1);
 	SET_REGISTER_VALUE(SPI2->CR2, SPI_CR2_ERRIE, 1);
 
+
 	// Set I2S mod on SPI2
 	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_I2SMOD, 0x01);
 	// Set as master - receive
@@ -274,11 +277,11 @@ void InitializeMicrophone(void)
 	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_DATLEN, 0x00);
 	// Set number of bits per channel (16 bit)
 	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_CHLEN, 0x00);
-
 	// Set 16kHz sampling (assume  data length 16bit)
 	SET_REGISTER_VALUE(SPI2->I2SPR, SPI_I2SPR_I2SDIV, 62);
 	SET_REGISTER_VALUE(SPI2->I2SPR, SPI_I2SPR_ODD, 0x01);
 
+	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_I2SE, 1U);
 }
 
 
@@ -319,11 +322,6 @@ void Initialize(void)
 	InitializeSDCard();
 	InitializeMicrophone();
 
-
-
-
-//	// Enable I2S
-	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_I2SE, 1U);
 }
 
 

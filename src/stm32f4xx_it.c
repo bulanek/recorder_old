@@ -36,16 +36,19 @@
 /// I2S interrupt
 void SPI2_IRQHandler(void) {
 
-//	if (f_TerminateSPI) {
+//	if (f_TerminateSPI)
+//			{
 //		// wait one spi2 clock
 //		TM_DelayUs(1000U);
 //		// Disable I2S
 //		SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_I2SE, 0x00);
 //		return;
 //	}
-	f_BufferI2S[f_BufferPosition] = SPI2->DR;
+	volatile uint32_t data = SPI2->DR;
+	f_BufferI2S[f_BufferPosition] = data;
 	f_signalPower += f_BufferI2S[f_BufferPosition];
 	f_BufferPosition = (++f_BufferPosition) % (BLOCK_SIZE / 2); // circular buffer
+
 	/* Check if data are available in SPI Data register */
 }
 

@@ -56,10 +56,6 @@ volatile uint8_t f_Initialized = 0U;
 
 int main(void)
  {
-//	SET_REGISTER_VALUE(SCB->SCR,SCB_SCR_SLEEPDEEP,0);
-	enable_irq();
-	__enable_irq();
-  __ASM volatile ("cpsie i" : : : "memory");
 
 
 	f_BufferPosition = 0U;
@@ -79,7 +75,7 @@ int main(void)
 	__enable_irq();
 //	while (f_recordOn != 0U) {
 	while (1U) {
-//		__disable_irq();
+		__disable_irq();
 		// interrupt I2S occured.
 		if (f_BufferPosition != f_BufferPositionCache) {
 			// Copy buffer I2S to buffer of SD card
@@ -126,6 +122,6 @@ int main(void)
 		} else {
 			__enable_irq();
 		}
-//		WFI();
+		WFI();
 	}
 }
