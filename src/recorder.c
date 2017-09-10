@@ -5,22 +5,14 @@
  *      Author: boris
  */
 
-//#include <stm32l1xx_ll_gpio.h>
-//#include <system_stm32l1xx.h>
 #include <stm32f4xx_ll_gpio.h>
 #include <system_stm32f4xx.h>
-//#include <stm32l152xc.h>
-//#include <stm32l1xx.h>
 #include <stm32f401xe.h>
 #include <stm32f4xx.h>
 
-//#include <stm32l1xx_ll_exti.h>
-//#include <stm32f4xx_ll_exti.h>
 #include <definitions.h>
 #include <recorder.h>
 #include <sdcard.h>
-
-
 
 
 /**
@@ -32,19 +24,9 @@
 */
 void assert_failed(uint8_t* file, uint32_t line)
 {
-  /* User can add his own implementation to report the file name and line number,
-  ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-
-  /* Infinite loop */
   while (1)
   {
   }
-}
-
-
-void TM_Delay_Init(void)
-{
-	SystemCoreClockUpdate();
 }
 
 volatile uint32_t f_TicksPerUs = 0;
@@ -73,21 +55,6 @@ void InitializeGPIO(void)
 
 //	// SPI (sdcard) configuration using LL lib.
 	LL_GPIO_InitTypeDef gpioInit;
-//
-//#ifdef DEBUG
-//	gpioInit.Pin = DEBUG_TX_PIN;
-//	gpioInit.Mode = LL_GPIO_MODE_OUTPUT;
-//	gpioInit.Speed = LL_GPIO_SPEED_FREQ_LOW;
-//	gpioInit.Pull = LL_GPIO_PULL_UP;
-//	gpioInit.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-//	if (LL_GPIO_Init(DEBUG_PORT, &gpioInit) != SUCCESS) {
-//		return;
-//	}
-//
-//	LL_GPIO_SetOutputPin(DEBUG_PORT, DEBUG_TX_PIN);
-//	LL_GPIO_ResetOutputPin(DEBUG_PORT, DEBUG_TX_PIN);
-//
-//#endif
 
 	gpioInit.Pin = SPI_SCK_PIN | SPI_MOSI_PIN;
 	gpioInit.Mode = LL_GPIO_MODE_ALTERNATE;
@@ -134,66 +101,6 @@ void InitializeGPIO(void)
 	if (LL_GPIO_Init(I2S_PORT, &gpioInit) != SUCCESS)
 	{
 	}
-
-//	gpioInit.Pin = RECORD_ON_PIN | RECORD_THRESHOLD_PIN;
-//	gpioInit.Mode = LL_GPIO_MODE_ALTERNATE;
-//	gpioInit.Pull = LL_GPIO_PULL_NO;
-//	gpioInit.Alternate = LL_GPIO_AF_0;
-//	gpioInit.Speed = LL_GPIO_SPEED_FREQ_LOW;
-//
-//	if (LL_GPIO_Init(RECORD_PORT, &gpioInit) != SUCCESS)
-//	{
-//	}
-	// Set record configuration
-
-//	volatile uint8_t f_recordOn = RECORD_PORT->ODR & RECORD_ON_PIN;
-//	volatile uint8_t f_recordThreshold = RECORD_PORT->ODR & RECORD_THRESHOLD_PIN;
-
-//	SET_REGISTER_VALUE(RCC->AHBENR,RCC_AHBENR_GPIOCEN,0);
-
-
-	// Set- reset pin
-
-	/*
- 	// TODO macro expansion e.g. MODER0 -> XX(MODER,0)
-	// Set input mode of reset pin (default)
- 	SET_REGISTER_VALUE(
- 			SET_RESET_PORT->MODER,
- 			GPIO_MODER_MODER0,
-			0);
-
- 	// Set pulldown mode
- 	SET_REGISTER_VALUE(
- 			SET_RESET_PORT->PUPDR,
-			GPIO_PUPDR_PUPDR0,
-			2);
-
- 	// Unmask external interrupt
- 	SET_REGISTER_VALUE(
- 			EXTI->IMR,
- 			EXTI_IMR_MR0,
-			1);
-
- 	// Enable rising edge interrupt
- 	SET_REGISTER_VALUE(
- 			EXTI->RTSR,
- 			EXTI_RTSR_TR0,
-			1);
-
- 	// Enable falling edge interrupt
- 	SET_REGISTER_VALUE(
- 			EXTI->FTSR,
- 			EXTI_FTSR_TR0,
-			1);
-
- 	// Connect pin 0 to alternate function 5
- 	SET_REGISTER_VALUE(
- 			SET_RESET_PORT->AFR[0],
- 			GPIO_AFRL_AFRL0, 5);
-	 */
-
-
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -207,11 +114,6 @@ void InitializeSDCard(void)
 	// TODO change while dev kit not used
 	SET_REGISTER_VALUE(RCC->APB2ENR, RCC_APB2ENR_SPI1EN, 1);
 	SET_REGISTER_VALUE(RCC->APB1ENR, RCC_APB1ENR_SPI3EN, 1);
-
-	SET_REGISTER_VALUE(RCC->PLLI2SCFGR, RCC_PLLI2SCFGR_PLLI2SN, 192);
-	SET_REGISTER_VALUE(RCC->PLLI2SCFGR, RCC_PLLI2SCFGR_PLLI2SR, 3);
-	SET_REGISTER_VALUE(RCC->CR, RCC_CR_PLLI2SON,1);
-
 	// Disable SPI ( set format while disabled SPI)
 	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_SPE, 0);
 
@@ -248,8 +150,6 @@ void InitializeSDCard(void)
 	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_BR,0b011);
 
 	std_updateCSDReg();
-
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -258,12 +158,16 @@ void InitializeSDCard(void)
 void InitializeMicrophone(void)
 {
 
+    // Set clock
+	SET_REGISTER_VALUE(RCC->PLLI2SCFGR, RCC_PLLI2SCFGR_PLLI2SN, 432);
+	SET_REGISTER_VALUE(RCC->PLLI2SCFGR, RCC_PLLI2SCFGR_PLLI2SR, 2);
+	SET_REGISTER_VALUE(RCC->CR, RCC_CR_PLLI2SON,1);
+
 	// Disable I2S
 	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_I2SE, 0);
 
 	SET_REGISTER_VALUE(SPI2->CR2, SPI_CR2_RXNEIE, 1);
 	SET_REGISTER_VALUE(SPI2->CR2, SPI_CR2_ERRIE, 1);
-
 
 	// Set I2S mod on SPI2
 	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_I2SMOD, 0x01);
@@ -290,39 +194,11 @@ void InitializeMicrophone(void)
 ////////////////////////////////////////////////////////////////////////////////
 void Initialize(void)
 {
-
-
- 	// Debug
-#ifdef DEBUG
-// 		f_UartHandle.Init.BaudRate = 115000U;
-// 		f_UartHandle.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-// 		f_UartHandle.Init.Mode = UART_MODE_TX;
-// 		f_UartHandle.Init.OverSampling = UART_OVERSAMPLING_8;
-// 		f_UartHandle.Init.Parity = UART_PARITY_NONE;
-// 		f_UartHandle.Init.StopBits = UART_STOPBITS_1;
-// 		f_UartHandle.Init.WordLength = UART_WORDLENGTH_8B;
-// 		if(HAL_UART_Init(&f_UartHandle) != HAL_OK)
-// 		{
-// 		}
-#endif
-
 	// Initialize NVIC
 	IRQn_Type type = SPI2_IRQn;
 	NVIC_EnableIRQ(type);
 	NVIC_SetPriority(type, 4U);
-	// TODO SPI3->SPI1
-//	type = SPI3_IRQn;
-//	NVIC_EnableIRQ(type);
-//	NVIC_SetPriority(type, 2);
-//	type = EXTI0_IRQn;
-//	NVIC_EnableIRQ(type);
-//	NVIC_SetPriority(type, 1);
-
 	InitializeGPIO();
 	InitializeSDCard();
 	InitializeMicrophone();
-
 }
-
-
-
