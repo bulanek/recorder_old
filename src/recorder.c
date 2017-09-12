@@ -22,7 +22,7 @@
 * @param  line: assert_param error line source number
 * @retval None
 */
-void assert_failed(uint8_t* file, uint32_t line)
+inline void assert_failed(uint8_t* file, uint32_t line)
 {
   while (1)
   {
@@ -64,19 +64,21 @@ void InitializeGPIO(void)
 	gpioInit.Alternate = SPI_AF;
 
 	if (LL_GPIO_Init(SPI_PORT, &gpioInit) != SUCCESS) {
+	    assert_failed((uint8_t*) __FILE__, __LINE__);
 	}
 
 	gpioInit.Pin = SPI_NSS_PIN;
 	if (LL_GPIO_Init(SPI_NSS_PORT, &gpioInit) != SUCCESS) {
+	    assert_failed((uint8_t*) __FILE__, __LINE__);
 	}
 
 	gpioInit.Pin = SPI_MISO_PIN;
 	gpioInit.Pull = LL_GPIO_PULL_UP;
 	if (LL_GPIO_Init(SPI_PORT, &gpioInit) != SUCCESS) {
+	    assert_failed((uint8_t*) __FILE__, __LINE__);
 	}
 
 	SPI_NSS_PORT->BSRR |= SUFFIX_EXPAND_ADD(GPIO_BSRR_BS, SPI_NSS_PIN_NUM);
-
 	SPI_NSS_PORT->BSRR |= SUFFIX_EXPAND_ADD(GPIO_BSRR_BR, SPI_NSS_PIN_NUM);
 	SPI_NSS_PORT->ODR = 1;
 
@@ -91,7 +93,9 @@ void InitializeGPIO(void)
 
 	if (LL_GPIO_Init(I2S_PORT, &gpioInit) != SUCCESS)
 	{
+	    assert_failed((uint8_t*) __FILE__, __LINE__);
 	}
+
 	gpioInit.Mode = LL_GPIO_MODE_ALTERNATE;
 	gpioInit.Speed = LL_GPIO_SPEED_FREQ_HIGH;
 	gpioInit.Alternate = SPI_I2S_AF;
@@ -99,8 +103,9 @@ void InitializeGPIO(void)
 	gpioInit.Pull = LL_GPIO_PULL_UP;
 
 	if (LL_GPIO_Init(I2S_PORT, &gpioInit) != SUCCESS)
-	{
-	}
+    {
+        assert_failed((uint8_t*) __FILE__, __LINE__);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -108,47 +113,36 @@ void InitializeGPIO(void)
 ////////////////////////////////////////////////////////////////////////////////
 void InitializeSDCard(void)
 {
-
 	/* Enable the SPI clock */
 	SET_REGISTER_VALUE(RCC->APB1ENR, RCC_APB1ENR_SPI2EN, 1);
 	// TODO change while dev kit not used
 	SET_REGISTER_VALUE(RCC->APB2ENR, RCC_APB2ENR_SPI1EN, 1);
-	SET_REGISTER_VALUE(RCC->APB1ENR, RCC_APB1ENR_SPI3EN, 1);
-	// Disable SPI ( set format while disabled SPI)
-	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_SPE, 0);
-
-	// Transmit, receive
-	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_BIDIMODE, 0);
-	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_RXONLY, 0);
-
-	// Data frame format, 8 bit
-	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_DFF, 0);
-
-	// MSBFIRST
-	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_LSBFIRST, 0);
-
+    SET_REGISTER_VALUE(RCC->APB1ENR, RCC_APB1ENR_SPI3EN, 1);
+    // Disable SPI ( set format while disabled SPI)
+    SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_SPE, 0);
+    // Transmit, receive
+    SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_BIDIMODE, 0);
+    SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_RXONLY, 0);
+    // Data frame format, 8 bit
+    SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_DFF, 0);
+    // MSBFIRST
+    SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_LSBFIRST, 0);
 	// Master mode
 	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_MSTR, 1);
-
 	// Clock polarity
 	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_CPOL, 1);
 	// Clock phase
 	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_CPHA, 1);
-
 	// Error interrupt
 //	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR2, SPI_CR2_ERRIE, 1);
-
 	// SS output enable
 	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR2, SPI_CR2_SSOE, 1);
-
-
 	// set frequency between 100-400kHz
 	// 16MHz F401 /64 = 250kHz
 	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_BR,0b101);
 	std_init();
 //	// Baud rate 16MHz/16 = 1MHz
 	SET_REGISTER_VALUE(SPI_SD_CARD_REG->CR1, SPI_CR1_BR,0b011);
-
 	std_updateCSDReg();
 }
 
@@ -157,13 +151,12 @@ void InitializeSDCard(void)
 ////////////////////////////////////////////////////////////////////////////////
 void InitializeMicrophone(void)
 {
-
     // Set clock
 	SET_REGISTER_VALUE(RCC->CR, RCC_CR_PLLI2SON,0);
 	SET_REGISTER_VALUE(RCC->CR, RCC_CR_PLLON,0);
 
     // STM32f041 reference note 105: VCO=PLL_input_f/PLLM; VCO in <1,2>MHz
-	//                                 recomended 2MHz to suppress jitter.
+	//                                 recommended 2MHz to suppress jitter.
     // for 16 MHz, PPLM = 8
     SET_REGISTER_VALUE(RCC->PLLCFGR, RCC_PLLCFGR_PLLM, 8);
     // see reference note 590: table for PLLI2SN PLLI2SR
@@ -177,10 +170,9 @@ void InitializeMicrophone(void)
 
 	// Disable I2S
 	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_I2SE, 0);
-
+	// Interrupts
 	SET_REGISTER_VALUE(SPI2->CR2, SPI_CR2_RXNEIE, 1);
 	SET_REGISTER_VALUE(SPI2->CR2, SPI_CR2_ERRIE, 1);
-
 	// Set I2S mod on SPI2
 	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_I2SMOD, 0x01);
 	// Set as master - receive
@@ -193,15 +185,13 @@ void InitializeMicrophone(void)
 	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_DATLEN, 0x00);
 	// Set number of bits per channel (16 bit)
 	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_CHLEN, 0x00);
-
 	SET_REGISTER_VALUE(SPI2->I2SCFGR, SPI_I2SCFGR_I2SE, 1U);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize SPI.
 ////////////////////////////////////////////////////////////////////////////////
-void Initialize(void)
+void InitializeRecorder(void)
 {
 	// Initialize NVIC
 	IRQn_Type type = SPI2_IRQn;

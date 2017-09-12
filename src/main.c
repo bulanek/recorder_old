@@ -15,112 +15,115 @@
 #include <definitions.h>
 #include <recorder.h>
 #include <sdcard.h>
-//#include <stm32l152c_discovery_glass_lcd.h>
 
-// Sum of 512B signal
-uint32_t volatile f_signalPower = 0U;
-/// Cached sum of 512B signal
-uint32_t f_SignalCache = 0U;
+// CONSTANTS
 
-const uint32_t SIGNAL_MIN = 100U;
+/// Signal for power off
+const uint32_t SIGNAL_MIN_LOW = 100U;
+/// Signal for power on
+const uint32_t SIGNAL_MIN_HIGH = 200U;
+/// Counter for signal < SIGNAL_MIN_LOW
 uint32_t f_LowLevelCounter = 0U;
 const uint32_t LOW_LEVEL_COUNTER_MAX = 10U;
+/// Counter for signal > SIGNAL_MIN_HIGH
 uint32_t f_HighLevelCounter = 0U;
 const uint32_t HIGH_LEVEL_COUNTER_MAX = 2U;
 
 // Position of buffer for next processing (changed in I2S interrupt)
 volatile uint32_t f_BufferPosition;
 // cache of f_BufferPosition in order to detect change of f_BufferPosition
-uint32_t f_BufferPositionCache = 0U;
+uint32_t f_BufferPositionCache;
 volatile uint32_t f_TerminateSPI = 0U;
-
 volatile uint16_t f_BufferI2S[BLOCK_SIZE / 2];
-
 volatile uint8_t f_recordOn;
-volatile uint8_t f_recordThreshold;
 
-volatile uint8_t f_Initialized = 0U;
-
- void WFI(void)
-{
-  __ASM volatile ("wfi");
-}
-
- void enable_irq(void)
- {
-	__ASM volatile ("cpsie i" : : : "memory");
- }
-
-
+// PRIVATE FUNCTIONS
+static inline void initializeGlobVar(void);
+/// @param[in]  u32_signal  signal of filled buffer
+static inline void recordOnSM(const uint32_t u32_signal);
 
 int main(void)
 {
 
-f_BufferPosition = 0U;
-f_signalPower = 0U;
-f_BufferPositionCache = 0U;
-f_LowLevelCounter = f_HighLevelCounter = 0U;
+    initializeGlobVar();
+    InitializeRecorder();
 
-if (f_Initialized == 0U)
-{
-Initialize();
-f_Initialized = 1U;
-}
-else
-{
-SET_REGISTER_VALUE(RCC->AHB1ENR, RCC_AHB1ENR_GPIOCEN, 1);
-f_recordOn = RECORD_PORT->ODR & RECORD_ON_PIN;
-f_recordThreshold = RECORD_PORT->ODR & RECORD_THRESHOLD_PIN;
-SET_REGISTER_VALUE(RCC->AHB1ENR, RCC_AHB1ENR_GPIOCEN, 0);
-}
-__enable_irq();
-while (1U)
-{
-__disable_irq();
-// interrupt I2S occured.
-if (f_BufferPosition != f_BufferPositionCache)
-{
-    // Copy buffer I2S to buffer of SD card
-    if (f_BufferPosition == 0)
+    __enable_irq();
+    __WFI();
+    while (1U)
     {
-        for (int i = 0; i < BLOCK_SIZE; ++i)
+        __disable_irq();
+        // interrupt I2S occured.
+        if (f_BufferPosition != f_BufferPositionCache)
         {
-            f_bufferSD[i] = (uint8_t)(f_BufferI2S[i / 2] >> 8 * (i % 2));
-        }
-    }
-    f_BufferPositionCache = f_BufferPosition;
-    f_SignalCache = f_signalPower;
-    if (f_BufferPositionCache == 0U)
-    {
-        f_signalPower = 0U;
-        __enable_irq();
-
-        if (f_TerminateSPI == 0U)
-        {
-
-            std_write();
-            if (f_SignalCache < SIGNAL_MIN)
+            f_BufferPositionCache = f_BufferPosition;
+            // Copy buffer I2S to buffer of SD card
+            if (f_BufferPositionCache == 0)
             {
-                ++f_LowLevelCounter;
+                auto uint32_t u32_signal = 0U;
+                for (int i = 0; i < BLOCK_SIZE; ++i)
+                {
+                    f_bufferSD[i] =
+                            (uint8_t) (f_BufferI2S[i / 2] >> 8 * (i % 2));
+                    u32_signal += f_bufferSD[i];
+                }
+                __enable_irq();
+
+                // state machine for f_recordOn
+                recordOnSM(u32_signal);
+                if (f_recordOn != 0U)
+                {
+                    std_write();
+                }
+            }
+            else
+            {
+                __enable_irq();
             }
         }
         else
         {
-            if ((f_BufferPositionCache == 0U) && (f_SignalCache > SIGNAL_MIN))
+            __enable_irq();
+        }
+        __WFI();
+    }
+}
+
+static void initializeGlobVar(void)
+{
+    f_BufferPosition = 0U;
+    f_BufferPositionCache = 0U;
+    f_LowLevelCounter = f_HighLevelCounter = 0U;
+}
+
+static void recordOnSM(const uint32_t u32_signal)
+{
+    if (f_recordOn != 0U)
+    {
+        if (u32_signal < SIGNAL_MIN_LOW)
+        {
+            if (++f_LowLevelCounter > LOW_LEVEL_COUNTER_MAX)
             {
-                ++f_HighLevelCounter;
+                f_recordOn = 0U;
             }
+        }
+        else
+        {
+            f_LowLevelCounter = 0U;
         }
     }
     else
     {
-        __enable_irq();
+        if (u32_signal > SIGNAL_MIN_HIGH)
+        {
+            if (++f_HighLevelCounter > HIGH_LEVEL_COUNTER_MAX)
+            {
+                f_recordOn = 1U;
+            }
+        }
+        else
+        {
+            f_HighLevelCounter = 0U;
+        }
     }
-}
-else
-{
-    __enable_irq();
-}
-WFI();
-}
 }

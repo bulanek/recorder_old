@@ -34,9 +34,8 @@
 /// I2S interrupt
 void SPI2_IRQHandler(void)
 {
-    volatile uint32_t data = SPI2->DR;
+    uint32_t data = SPI2->DR;
     f_BufferI2S[f_BufferPosition] = data;
-    f_signalPower += f_BufferI2S[f_BufferPosition];
     f_BufferPosition = (++f_BufferPosition) % (BLOCK_SIZE / 2); // circular buffer
     /* Check if data are available in SPI Data register */
 }
