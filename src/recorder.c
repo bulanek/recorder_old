@@ -13,6 +13,7 @@
 #include <definitions.h>
 #include <recorder.h>
 #include <sdcard.h>
+#include <diskio.h>
 
 
 /**
@@ -198,6 +199,11 @@ void InitializeRecorder(void)
 	NVIC_EnableIRQ(type);
 	NVIC_SetPriority(type, 4U);
 	InitializeGPIO();
-	InitializeSDCard();
+//	InitializeSDCard();
 	InitializeMicrophone();
+	DSTATUS status = disk_initialize(0);
+	if (status != 0)
+	{
+	    assert_failed((uint8_t*) __FILE__, __LINE__);
+	}
 }

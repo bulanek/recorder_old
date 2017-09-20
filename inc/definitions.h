@@ -9,7 +9,8 @@
 #define DEFINITIONS_H_
 
 //#include <stm32l1xx_ll_gpio.h>
-#include <stm32f4xx_ll_gpio.h>
+//#include <stm32f4xx_ll_gpio.h>
+#include <stm32f401xe.h>
 //#include <sdcard.h>
 
 ////////////////////////////////////////////////////////////////////////////////

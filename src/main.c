@@ -42,8 +42,16 @@ static inline void initializeGlobVar(void);
 /// @param[in]  u32_signal  signal of filled buffer
 static inline void recordOnSM(const uint32_t u32_signal);
 
+extern void disk_timerproc (void);
+void SysTick_Handler (void)
+{
+	disk_timerproc();	/* Disk timer process */
+}
+
 int main(void)
 {
+    SystemCoreClockUpdate();
+    SysTick_Config(SystemCoreClock / 1000U);
 
     initializeGlobVar();
     InitializeRecorder();
@@ -58,7 +66,7 @@ int main(void)
         {
             f_BufferPositionCache = f_BufferPosition;
             // Copy buffer I2S to buffer of SD card
-            if (f_BufferPositionCache == 0)
+            if (f_BufferPositionCache == 0U)
             {
                 auto uint32_t u32_signal = 0U;
                 for (int i = 0; i < BLOCK_SIZE; ++i)

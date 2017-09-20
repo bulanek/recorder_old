@@ -114,11 +114,17 @@ uint8_t std_cmd(uint8_t command, uint32_t arg);
 
 SPI_STATUS std_init(void);
 
+
 void std_terminate(void);
 
 void std_write(void);
 
 void std_updateCSDReg(void);
+
+/// FUNCTIONS USED FOR ff13 (fat system)
+
+
+
 
 enum SDType{
 	SDHC_SDXC,
