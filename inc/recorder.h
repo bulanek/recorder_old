@@ -21,6 +21,11 @@ void TM_DelayUs(const uint32_t timeUs);
 
 void InitializeGPIO(void);
 
+/// Return 0, if no config needed
+uint8_t IsConfPinOn(void);
+
+void InitializeConfigUART(void);
+
 void InitializeSDCard(void);
 
 void InitializeMicrophone(void);

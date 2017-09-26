@@ -10,25 +10,12 @@
 #include <stm32f401xe.h>
 #include <stm32f4xx.h>
 
+#include <assert.h>
 #include <definitions.h>
 #include <recorder.h>
 #include <sdcard.h>
 #include <diskio.h>
 
-
-/**
-* @brief  Reports the name of the source file and the source line number
-*   where the assert_param error has occurred.
-* @param  file: pointer to the source file name
-* @param  line: assert_param error line source number
-* @retval None
-*/
-inline void assert_failed(uint8_t* file, uint32_t line)
-{
-  while (1)
-  {
-  }
-}
 
 volatile uint32_t f_TicksPerUs = 0;
 #pragma GCC push_options
@@ -64,20 +51,14 @@ void InitializeGPIO(void)
 	gpioInit.Pull = LL_GPIO_PULL_UP;
 	gpioInit.Alternate = SPI_AF;
 
-	if (LL_GPIO_Init(SPI_PORT, &gpioInit) != SUCCESS) {
-	    assert_failed((uint8_t*) __FILE__, __LINE__);
-	}
+	ASSERT_ALL(LL_GPIO_Init(SPI_PORT, &gpioInit) == SUCCESS);
 
 	gpioInit.Pin = SPI_NSS_PIN;
-	if (LL_GPIO_Init(SPI_NSS_PORT, &gpioInit) != SUCCESS) {
-	    assert_failed((uint8_t*) __FILE__, __LINE__);
-	}
+	ASSERT_ALL(LL_GPIO_Init(SPI_NSS_PORT, &gpioInit) == SUCCESS);
 
 	gpioInit.Pin = SPI_MISO_PIN;
 	gpioInit.Pull = LL_GPIO_PULL_UP;
-	if (LL_GPIO_Init(SPI_PORT, &gpioInit) != SUCCESS) {
-	    assert_failed((uint8_t*) __FILE__, __LINE__);
-	}
+	ASSERT_ALL(LL_GPIO_Init(SPI_PORT, &gpioInit) == SUCCESS);
 
 	SPI_NSS_PORT->BSRR |= SUFFIX_EXPAND_ADD(GPIO_BSRR_BS, SPI_NSS_PIN_NUM);
 	SPI_NSS_PORT->BSRR |= SUFFIX_EXPAND_ADD(GPIO_BSRR_BR, SPI_NSS_PIN_NUM);
@@ -92,10 +73,7 @@ void InitializeGPIO(void)
 	gpioInit.Pull = LL_GPIO_PULL_DOWN;
 	gpioInit.Alternate = SPI_I2S_AF;
 
-	if (LL_GPIO_Init(I2S_PORT, &gpioInit) != SUCCESS)
-	{
-	    assert_failed((uint8_t*) __FILE__, __LINE__);
-	}
+	ASSERT_ALL(LL_GPIO_Init(I2S_PORT, &gpioInit) == SUCCESS);
 
 	gpioInit.Mode = LL_GPIO_MODE_ALTERNATE;
 	gpioInit.Speed = LL_GPIO_SPEED_FREQ_HIGH;
@@ -103,10 +81,55 @@ void InitializeGPIO(void)
 	gpioInit.Pin = I2S_SD_PIN;
 	gpioInit.Pull = LL_GPIO_PULL_UP;
 
-	if (LL_GPIO_Init(I2S_PORT, &gpioInit) != SUCCESS)
-    {
-        assert_failed((uint8_t*) __FILE__, __LINE__);
-    }
+	ASSERT_ALL(LL_GPIO_Init(I2S_PORT, &gpioInit) == SUCCESS);
+
+	// Config pin
+	gpioInit.Pin =  CONFIG_PIN;
+	gpioInit.Mode = LL_GPIO_MODE_INPUT;
+	gpioInit.Pull = LL_GPIO_PULL_DOWN;
+
+    ASSERT_ALL(LL_GPIO_Init(CONFIG_PORT, &gpioInit) == SUCCESS);
+
+    // UART PINS
+
+    gpioInit.Pin = CONFIG_UART_TX_PIN;
+    gpioInit.Mode = LL_GPIO_MODE_OUTPUT;
+    gpioInit.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+    gpioInit.Speed = LL_GPIO_SPEED_FREQ_HIGH;
+
+    ASSERT_ALL(LL_GPIO_Init(CONFIG_UART_PORT, &gpioInit) == SUCCESS);
+
+    gpioInit.Pin = CONFIG_UART_RX_PIN;
+    gpioInit.Mode = LL_GPIO_MODE_INPUT;
+    gpioInit.Pull = LL_GPIO_PULL_UP;
+    gpioInit.Speed = LL_GPIO_SPEED_FREQ_HIGH;
+
+    ASSERT_ALL(LL_GPIO_Init(CONFIG_UART_PORT, &gpioInit) == SUCCESS);
+}
+
+uint8_t IsConfPinOn(void)
+{
+    return CONFIG_PORT->IDR & CONFIG_PIN;
+}
+
+void InitializeConfigUART(void)
+{
+    // TODO BB: in case of change USART1 -> different!!
+    RCC->APB2ENR |=  RCC_APB2ENR_USART1EN;
+
+    //Disable UART (in case the boot loader left it on)
+    CONFIG_UART->CR1 = 0;
+    CONFIG_UART->CR2 = 0;
+    CONFIG_UART->CR3 = 0;
+
+    /* Configure USART3 */
+    /* 8 data bit, 1 start bit, 1 stop bit; no parity; receive enable;
+     * over-sampling 16 */
+    CONFIG_UART->CR1 = USART_CR1_RE | USART_CR1_TE;
+    //BRR = 12 MHz / required UART clock
+    CONFIG_UART->BRR = (uint16_t) (SystemCoreClock / BAUD_RATE);
+    //enable uart
+    CONFIG_UART->CR1 |= USART_CR1_UE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -201,9 +224,4 @@ void InitializeRecorder(void)
 	InitializeGPIO();
 //	InitializeSDCard();
 	InitializeMicrophone();
-	DSTATUS status = disk_initialize(0);
-	if (status != 0)
-	{
-	    assert_failed((uint8_t*) __FILE__, __LINE__);
-	}
 }

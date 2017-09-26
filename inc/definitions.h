@@ -55,6 +55,16 @@
 #define I2S_CK_PIN						  (1 << 13)
 #define I2S_WS_PIN						  (1 << 12)
 
+// TODO BB: correction
+#define CONFIG_PIN      (1 << 4)
+#define CONFIG_PORT     GPIOA
+
+#define CONFIG_UART_TX_PIN (1 << 5)
+#define CONFIG_UART_RX_PIN (1 << 6)
+#define CONFIG_UART_PORT GPIOB
+#define CONFIG_UART USART1
+#define BAUD_RATE 115200
+
 #define LED_1_PIN							(1 << 3)
 #define LED_2_PIN							(1 << 4)
 #define LED_3_PIN							(1 << 5)
